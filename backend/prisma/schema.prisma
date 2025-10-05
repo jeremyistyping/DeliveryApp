@@ -1,0 +1,195 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MAIN_ADMIN      // Full access to everything
+  GENERAL_ADMIN   // Operational access
+  USER            // Limited access - view only
+  MERCHANT        // Keep for backward compatibility
+  ADMIN           // Keep for backward compatibility
+  OWNER           // Keep for backward compatibility
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  PREPAID
+}
+
+enum CODStatus {
+  PENDING
+  COLLECTED
+  REMITTED
+  SETTLED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum CourierType {
+  JNE
+  TIKI
+  POS
+  NINJA
+  SICEPAT
+  ANTERAJA
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  merchant Merchant?
+
+  @@map("users")
+}
+
+model Merchant {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  businessName String
+  businessType String
+  address      String  @db.Text
+  city         String
+  province     String
+  postalCode   String
+  phone        String
+  email        String
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("merchants")
+}
+
+model Order {
+  id                   String        @id @default(cuid())
+  merchantId           String
+  orderNumber          String        @unique
+  recipientName        String
+  recipientPhone       String
+  recipientAddress     String        @db.Text
+  recipientCity        String
+  recipientProvince    String
+  recipientPostalCode  String
+  courier              CourierType
+  service              String
+  weight               Float
+  length               Float
+  width                Float
+  height               Float
+  itemName             String
+  itemValue            Float
+  paymentMethod        PaymentMethod
+  codAmount            Float?
+  shippingCost         Float
+  status               OrderStatus   @default(PENDING)
+  trackingNumber       String?
+  printCount           Int           @default(0)
+  lastPrintedAt        DateTime?
+  notes                String?       @db.Text
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  merchant        Merchant         @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  trackingHistory TrackingHistory[]
+  codRecord       CODRecord?
+  returnRecord    Return?
+
+  @@map("orders")
+}
+
+model TrackingHistory {
+  id          String   @id @default(cuid())
+  orderId     String
+  status      String
+  description String   @db.Text
+  city        String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("tracking_history")
+}
+
+model CODRecord {
+  id          String     @id @default(cuid())
+  orderId     String     @unique
+  amount      Float
+  status      CODStatus  @default(PENDING)
+  collectedAt DateTime?
+  remittedAt  DateTime?
+  settledAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("cod_records")
+}
+
+model Return {
+  id          String       @id @default(cuid())
+  orderId     String       @unique
+  reason      String       @db.Text
+  status      ReturnStatus @default(REQUESTED)
+  requestedAt DateTime     @default(now())
+  approvedAt  DateTime?
+  completedAt DateTime?
+  notes       String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("returns")
+}
+
+model ShippingRate {
+  id        String      @id @default(cuid())
+  courier   CourierType
+  service   String
+  origin    String
+  destination String
+  weight    Float
+  cost      Float
+  etd       String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("shipping_rates")
+}
