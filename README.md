@@ -1,4 +1,4 @@
-# Mengantar - Delivery Management System
+# Mengantar - Delivery Management System (DeliveryApp)
 
 A full-stack delivery aggregator web application for merchants to manage shipping orders, track deliveries, handle COD payments, and generate reports.
 
