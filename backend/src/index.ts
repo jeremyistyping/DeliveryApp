@@ -13,6 +13,7 @@ import codRoutes from './routes/cod';
 import returnRoutes from './routes/return';
 import reportRoutes from './routes/report';
 import ownerRoutes from './routes/owner';
+import usersRoutes from './routes/users';
 
 // Load environment variables
 dotenv.config();
@@ -58,6 +59,7 @@ app.use('/api/cod', codRoutes);
 app.use('/api/returns', returnRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/owner', ownerRoutes);
+app.use('/api/users', usersRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

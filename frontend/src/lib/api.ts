@@ -131,3 +131,13 @@ export const reports = {
   shipping: (params?: any) => api.get('/reports/shipping', { params }),
   returns: (params?: any) => api.get('/reports/returns', { params }),
 };
+
+// Users endpoints (Admin only)
+export const users = {
+  list: () => api.get('/users'),
+  get: (id: string) => api.get(`/users/${id}`),
+  updateRole: (id: string, data: { role: string }) => api.patch(`/users/${id}/role`, data),
+  updateStatus: (id: string, data: { isActive: boolean }) => api.patch(`/users/${id}/status`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
+  stats: () => api.get('/users/stats/summary'),
+};
